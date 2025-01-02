@@ -27,14 +27,5 @@ public struct TileMapComponent : IComponentData, IDisposable
 public struct TileData
 {
     public int2 position;
-    public int obstacle;
-}
-
-public struct ObstacleComponent : IComponentData
-{
-}
-
-public struct ObstacleEntityPrefab : IComponentData
-{
-    public Entity obstacle;
+    public bool obstacle;
 }

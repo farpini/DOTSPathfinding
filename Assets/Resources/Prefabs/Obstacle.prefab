@@ -11,7 +11,8 @@ GameObject:
   - component: {fileID: 8214504265993262045}
   - component: {fileID: 394263839891954426}
   - component: {fileID: 1421490827010618545}
-  - component: {fileID: 80422823410266370}
+  - component: {fileID: -5903324414988600059}
+  - component: {fileID: 3011534802905658862}
   m_Layer: 0
   m_Name: Obstacle
   m_TagString: Untagged
@@ -87,7 +88,7 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &80422823410266370
+--- !u!114 &-5903324414988600059
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -96,6 +97,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 2564028399874293199}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f9cacc46c2bf9684480ea49eef320fcd, type: 3}
+  m_Script: {fileID: 11500000, guid: 18d561b1a9ce7e44da6e3e219de6e542, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  boxCollider: {fileID: 3011534802905658862}
+--- !u!65 &3011534802905658862
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2564028399874293199}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}

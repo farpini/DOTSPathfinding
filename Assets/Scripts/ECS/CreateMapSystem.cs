@@ -46,7 +46,7 @@ public partial struct CreateMapSystem : ISystem, ISystemStartStop
         {
             for (int j = 0; j < mapDimention.y; j++)
             {
-                mapTiles[tileIndex++] = new TileData { position = new int2(i, j), obstacle = 0 };
+                mapTiles[tileIndex++] = new TileData { position = new int2(i, j), obstacle = false };
             }
         }
         m_TileMapComponent = new TileMapComponent { map = mapTiles, mapDimention = mapDimention };
