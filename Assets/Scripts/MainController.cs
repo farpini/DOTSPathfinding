@@ -1,7 +1,7 @@
 using System.Collections.Generic;
+using TMPro;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -10,28 +10,44 @@ public class MainController : MonoBehaviour
 {
     [SerializeField] private Transform groundMap;
     [SerializeField] private MapSO mapSettings;
+    [SerializeField] private TMP_Text agentCountText;
     [SerializeField] private Button createObstacleButton;
+    [SerializeField] private Button destroyObstacleButton;
+    [SerializeField] private Slider obstacleWidthSlider;
+    [SerializeField] private TMP_Text obstacleWidthText;
+    [SerializeField] private Button spawnAgentButton;
+    [SerializeField] private Button destroyAgentButton;
+    [SerializeField] private TMP_Text agentSpawnCountText;
+    [SerializeField] private Slider agentSpawnCountSlider;
+    [SerializeField] private TMP_Text pathComputePerFrameCountText;
+    [SerializeField] private Slider pathComputePerFrameSlider;
     [SerializeField] private Transform obstaclePointTransform;
     [SerializeField] private Obstacle obstaclePrefab;
     [SerializeField] private float obstacleHeight = 5f;
-    [SerializeField] private float obstacleWidth = 1f;
+    [SerializeField] private float obstacleWidth;
 
     [SerializeField] private Vector2 worldPosition;
     [SerializeField] private Vector2Int tilePosition;
 
     [SerializeField] private State currentState;
 
+    private int agentCount = 0;
+    private int agentToSpawnAmount = 1;
+    private int pathComputePerFrameCount = 8;
+
     private Stack<Obstacle> obstaclesStack;
 
     private Plane groundPlane;
     private EntityManager entityManager;
     private EntityQuery tileMapQuery;
+    private EntityQuery managerQuery;
 
     private Ray ray;
 
     private Vector2 INVALID_FLOAT2;
     private Vector2Int INVALID_INT2;
 
+    private bool isDestroyingObstacle;
     private bool computeObstacle;
     private Bounds currentObstacleBounds;
 
@@ -55,25 +71,48 @@ public class MainController : MonoBehaviour
         obstaclesStack = new();
 
         createObstacleButton.onClick.AddListener(() => OnCreateObstacleButtonClicked());
+        destroyObstacleButton.onClick.AddListener(() => OnDestroyObstacleButtonClicked());
+        obstacleWidthSlider.onValueChanged.AddListener((float v) => OnObstacleWidthChanged(v));
 
-        //var scaleMatrix = float4x4.Scale(3444f, 1f, 1f);
-        //Debug.Log(scaleMatrix);
-        //var rotationMatrix = float4x4.RotateY(48f);
-        //rotationMatrix.c3.x = 55f;
-        //Debug.Log(rotationMatrix);
+        spawnAgentButton.onClick.AddListener(() => OnSpawnAgentButtonClicked());
+        destroyAgentButton.onClick.AddListener(() => OnRemoveAgentButtonClicked());
+        agentSpawnCountSlider.onValueChanged.AddListener((float v) => OnAgentSpawnCountChanged(v));
+
+        pathComputePerFrameSlider.onValueChanged.AddListener((float v) => OnPathComputePerFrameCountChanged(v));
+
+        obstacleWidth = (int)obstacleWidthSlider.value;
+        obstacleWidthText.text = "Obstacle Width: " + obstacleWidth.ToString();
+
+        agentToSpawnAmount = (int)agentSpawnCountSlider.value;
+        agentSpawnCountText.text = "Spawn nº: " + agentToSpawnAmount.ToString();
+
+        pathComputePerFrameCount = (int)pathComputePerFrameSlider.value;
+        pathComputePerFrameCountText.text = "PerFrame Compute Path Count: " + pathComputePerFrameCount.ToString();
     }
 
     private void Start ()
     {
         entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
         tileMapQuery = entityManager.CreateEntityQuery(new ComponentType[] { typeof(TileMapComponent) });
+        managerQuery = entityManager.CreateEntityQuery(new ComponentType[] { typeof(ManagerComponent) });
 
+        agentCountText.text = "Agent Count: " + agentCount.ToString();
+
+        isDestroyingObstacle = false;
         computeObstacle = false;
     }
 
     private void OnDestroy ()
     {
         createObstacleButton.onClick.RemoveAllListeners();
+        destroyObstacleButton.onClick.RemoveAllListeners();
+        obstacleWidthSlider.onValueChanged.RemoveAllListeners();
+
+        spawnAgentButton.onClick.RemoveAllListeners();
+        destroyAgentButton.onClick.RemoveAllListeners();
+        agentSpawnCountSlider.onValueChanged.RemoveAllListeners();
+
+        pathComputePerFrameSlider.onValueChanged.RemoveAllListeners();
     }
 
     private void Update ()
@@ -83,7 +122,6 @@ public class MainController : MonoBehaviour
         GetObstacleRemove();
 
         DebugTileMap();
-
     }
 
     private void LateUpdate ()
@@ -97,7 +135,7 @@ public class MainController : MonoBehaviour
 
     private void DebugTileMap ()
     {
-        if (Input.GetKeyDown(KeyCode.F))
+        if (Input.GetKeyDown(KeyCode.F1))
         {
             var tileMapComponent = tileMapQuery.GetSingleton<TileMapComponent>();
             var tileDim = tileMapComponent.mapDimention;
@@ -117,6 +155,30 @@ public class MainController : MonoBehaviour
         }
     }
 
+    private void OnObstacleWidthChanged (float value)
+    {
+        obstacleWidth = (int)value;
+        obstacleWidthText.text = "Obstacle Width: " + obstacleWidth.ToString();
+    }
+
+    private void OnAgentSpawnCountChanged (float value)
+    {
+        agentToSpawnAmount = (int)value;
+        agentSpawnCountText.text = "Spawn nº: " + agentToSpawnAmount.ToString();
+    }
+
+    private void OnPathComputePerFrameCountChanged (float value)
+    {
+        pathComputePerFrameCount = (int)value;
+        pathComputePerFrameCountText.text = "PerFrame Compute Path Count: " + pathComputePerFrameCount.ToString();
+
+        if (managerQuery.HasSingleton<ManagerComponent>())
+        {
+            var managerComponent = managerQuery.GetSingletonRW<ManagerComponent>();
+            managerComponent.ValueRW.maxPathsComputedPerFrame = pathComputePerFrameCount;
+        }
+    }
+
     private void GetObstacleRemove ()
     {
         if (currentState != State.None)
@@ -124,7 +186,7 @@ public class MainController : MonoBehaviour
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.Delete))
+        if (isDestroyingObstacle && Input.GetMouseButtonDown(0))
         {
             if (Physics.Raycast(ray, out var hitInfo)) 
             {
@@ -132,6 +194,8 @@ public class MainController : MonoBehaviour
                 computeObstacle = true;
                 Object.Destroy(hitInfo.collider.gameObject);
             }
+
+            isDestroyingObstacle = false;
         }
     }
 
@@ -252,8 +316,16 @@ public class MainController : MonoBehaviour
         CreateNewObstacle();
     }
 
+    private void OnDestroyObstacleButtonClicked ()
+    {
+        CancelObstacleCreation();
+        isDestroyingObstacle = true;
+    }
+
     private void CancelObstacleCreation ()
     {
+        isDestroyingObstacle = false;
+
         if (currentState == State.None)
         {
             return;
@@ -276,6 +348,23 @@ public class MainController : MonoBehaviour
         var obstacle = Instantiate(obstaclePrefab, transform);
         obstaclesStack.Push(obstacle);
         currentState = State.SelectingObstaclePoint_A;
+    }
+
+    private void OnSpawnAgentButtonClicked ()
+    {
+        var managerComponent = managerQuery.GetSingletonRW<ManagerComponent>();
+        managerComponent.ValueRW.spawnAgentCount = agentToSpawnAmount;
+        agentCount += agentToSpawnAmount;
+        agentCountText.text = "Agent Count: " + agentCount.ToString();
+    }
+
+    private void OnRemoveAgentButtonClicked ()
+    {
+        var managerComponent = managerQuery.GetSingletonRW<ManagerComponent>();
+        managerComponent.ValueRW.spawnAgentCount = 0;
+        managerComponent.ValueRW.removeAgents = true;
+        agentCount = 0;
+        agentCountText.text = "Agent Count: " + agentCount.ToString();
     }
 }
 
