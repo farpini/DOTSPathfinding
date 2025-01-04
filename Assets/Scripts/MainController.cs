@@ -81,13 +81,13 @@ public class MainController : MonoBehaviour
         pathComputePerFrameSlider.onValueChanged.AddListener((float v) => OnPathComputePerFrameCountChanged(v));
 
         obstacleWidth = (int)obstacleWidthSlider.value;
-        obstacleWidthText.text = "Obstacle Width: " + obstacleWidth.ToString();
+        UpdateObstacleWidthText();
 
         agentToSpawnAmount = (int)agentSpawnCountSlider.value;
-        agentSpawnCountText.text = "Spawn nº: " + agentToSpawnAmount.ToString();
+        UpdateSpawnNumberText();
 
         pathComputePerFrameCount = (int)pathComputePerFrameSlider.value;
-        pathComputePerFrameCountText.text = "PerFrame Compute Path Count: " + pathComputePerFrameCount.ToString();
+        UpdatePerFramePathCountText();
     }
 
     private void Start ()
@@ -96,7 +96,7 @@ public class MainController : MonoBehaviour
         tileMapQuery = entityManager.CreateEntityQuery(new ComponentType[] { typeof(TileMapComponent) });
         managerQuery = entityManager.CreateEntityQuery(new ComponentType[] { typeof(ManagerComponent) });
 
-        agentCountText.text = "Agent Count: " + agentCount.ToString();
+        UpdateAgentCountText();
 
         isDestroyingObstacle = false;
         computeObstacle = false;
@@ -158,19 +158,19 @@ public class MainController : MonoBehaviour
     private void OnObstacleWidthChanged (float value)
     {
         obstacleWidth = (int)value;
-        obstacleWidthText.text = "Obstacle Width: " + obstacleWidth.ToString();
+        UpdateObstacleWidthText();
     }
 
     private void OnAgentSpawnCountChanged (float value)
     {
         agentToSpawnAmount = (int)value;
-        agentSpawnCountText.text = "Spawn nº: " + agentToSpawnAmount.ToString();
+        UpdateSpawnNumberText();
     }
 
     private void OnPathComputePerFrameCountChanged (float value)
     {
         pathComputePerFrameCount = (int)value;
-        pathComputePerFrameCountText.text = "PerFrame Compute Path Count: " + pathComputePerFrameCount.ToString();
+        UpdatePerFramePathCountText();
 
         if (managerQuery.HasSingleton<ManagerComponent>())
         {
@@ -334,7 +334,7 @@ public class MainController : MonoBehaviour
         if (obstaclesStack.TryPop(out var obstacle))
         {
             Object.Destroy(obstacle.gameObject);
-            Debug.Log("Obstacle Destroyed");
+            //Debug.Log("Obstacle Destroyed");
             obstacle = null;
         }
 
@@ -355,7 +355,7 @@ public class MainController : MonoBehaviour
         var managerComponent = managerQuery.GetSingletonRW<ManagerComponent>();
         managerComponent.ValueRW.spawnAgentCount = agentToSpawnAmount;
         agentCount += agentToSpawnAmount;
-        agentCountText.text = "Agent Count: " + agentCount.ToString();
+        UpdateAgentCountText();
     }
 
     private void OnRemoveAgentButtonClicked ()
@@ -364,7 +364,27 @@ public class MainController : MonoBehaviour
         managerComponent.ValueRW.spawnAgentCount = 0;
         managerComponent.ValueRW.removeAgents = true;
         agentCount = 0;
+        UpdateAgentCountText();
+    }
+
+    private void UpdateAgentCountText ()
+    {
         agentCountText.text = "Agent Count: " + agentCount.ToString();
+    }
+
+    private void UpdateObstacleWidthText ()
+    {
+        obstacleWidthText.text = "Obstacle Width: " + obstacleWidth.ToString();
+    }
+
+    private void UpdateSpawnNumberText ()
+    {
+        agentSpawnCountText.text = "Spawn nº: " + agentToSpawnAmount.ToString();
+    }
+
+    private void UpdatePerFramePathCountText ()
+    {
+        pathComputePerFrameCountText.text = "PerFrame Compute Path Count: " + pathComputePerFrameCount.ToString();
     }
 }
 

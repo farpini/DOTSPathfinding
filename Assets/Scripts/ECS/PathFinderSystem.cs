@@ -50,7 +50,6 @@ public partial struct PathFinderSystem : ISystem, ISystemStartStop
 
     public void OnStartRunning (ref SystemState state)
     {
-        //m_MapComponent = SystemAPI.GetSingleton<MapComponent>();
         m_MapDimension = SystemAPI.GetSingleton<TileMapComponent>().mapDimention;
 
         CreateNeighbourPositions();

@@ -4,7 +4,6 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
-
 public partial struct MoveAgentSystem : ISystem
 {
     [BurstCompile]
@@ -17,7 +16,6 @@ public partial struct MoveAgentSystem : ISystem
     [BurstCompile]
     public void OnDestroy (ref SystemState state)
     {
-
     }
 
     [BurstCompile]

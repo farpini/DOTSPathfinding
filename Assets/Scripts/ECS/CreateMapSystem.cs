@@ -61,14 +61,10 @@ public partial struct CreateMapSystem : ISystem, ISystemStartStop
     [BurstCompile]
     public void OnStopRunning (ref SystemState state)
     {
-        
     }
 
     [BurstCompile]
     public void OnUpdate (ref SystemState state)
     {
-
-
-
     }
 }
